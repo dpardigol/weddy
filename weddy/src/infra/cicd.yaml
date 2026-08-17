@@ -44,8 +44,9 @@ Resources:
   # ============================================================
   # CODEPIPELINE ARTIFACT BUCKET
   #
-  # Internal bucket used by CodePipeline to pass the Git source
-  # artifact to CodeBuild.
+  # Internal S3 bucket used by CodePipeline to move the GitHub
+  # source artifact into CodeBuild.
+  #
   # This is NOT the website bucket.
   # ============================================================
 
@@ -122,6 +123,11 @@ Resources:
 
         # --------------------------------------------------------
         # SSM PARAMETER STORE
+        #
+        # buildspec.yaml reads:
+        #
+        # /weddy/dev/website-bucket
+        # /weddy/dev/cloudfront-distribution-id
         # --------------------------------------------------------
 
         - PolicyName: ReadWeddyParameters
@@ -143,10 +149,7 @@ Resources:
 
 
         # --------------------------------------------------------
-        # CODEPIPELINE ARTIFACT BUCKET
-        #
-        # CodeBuild needs to read the source artifact that
-        # CodePipeline places in this bucket.
+        # READ CODEPIPELINE ARTIFACTS
         # --------------------------------------------------------
 
         - PolicyName: ReadPipelineArtifacts
@@ -157,7 +160,9 @@ Resources:
 
             Statement:
 
-              - Effect: Allow
+              - Sid: ReadArtifactBucket
+
+                Effect: Allow
 
                 Action:
                   - s3:GetBucketLocation
@@ -167,7 +172,9 @@ Resources:
                   - !GetAtt PipelineArtifactBucket.Arn
 
 
-              - Effect: Allow
+              - Sid: ReadArtifactObjects
+
+                Effect: Allow
 
                 Action:
                   - s3:GetObject
@@ -178,9 +185,11 @@ Resources:
 
 
         # --------------------------------------------------------
-        # WEBSITE S3 BUCKET
+        # DEPLOY TO WEDDY WEBSITE BUCKET
         #
-        # Restricted to the exact bucket exported by website.yaml
+        # website.yaml must export:
+        #
+        # WeddyDevWebsiteBucketArn
         # --------------------------------------------------------
 
         - PolicyName: DeployWeddyWebsite
@@ -221,8 +230,9 @@ Resources:
         # --------------------------------------------------------
         # CLOUDFRONT INVALIDATION
         #
-        # Restricted to the exact distribution exported by
-        # website.yaml
+        # website.yaml must export:
+        #
+        # WeddyDevCloudFrontDistributionId
         # --------------------------------------------------------
 
         - PolicyName: InvalidateWeddyCloudFront
@@ -249,9 +259,8 @@ Resources:
   # CODEBUILD PROJECT
   #
   # IMPORTANT:
-  # Logical ID preserved from your existing stack.
-  # Do NOT rename this unless you intentionally replace
-  # the existing CodeBuild project.
+  # Keep this logical ID because your existing CloudFormation
+  # stack already owns this CodeBuild resource.
   # ============================================================
 
   WeddyCodeBuildProject:
@@ -262,7 +271,7 @@ Resources:
       Name: !Sub "weddy-${Environment}-build"
 
       Description: !Sub >
-        Build and deploy the Weddy ${Environment} website.
+        Build and deploy the Weddy ${Environment} static website.
 
       ServiceRole:
         !GetAtt CodeBuildServiceRole.Arn
@@ -272,7 +281,9 @@ Resources:
 
         Type: CODEPIPELINE
 
-        BuildSpec: buildspec.yml
+        # IMPORTANT:
+        # This must match the filename at the Git repository root.
+        BuildSpec: buildspec.yaml
 
 
       Artifacts:
@@ -369,7 +380,7 @@ Resources:
 
 
               # --------------------------------------------------
-              # CODEBUILD
+              # START / MONITOR CODEBUILD
               # --------------------------------------------------
 
               - Sid: ExecuteCodeBuild
@@ -385,7 +396,7 @@ Resources:
 
 
               # --------------------------------------------------
-              # ARTIFACT BUCKET
+              # PIPELINE ARTIFACT BUCKET
               # --------------------------------------------------
 
               - Sid: AccessArtifactBucket
@@ -440,7 +451,9 @@ Resources:
       Stages:
 
         # --------------------------------------------------------
-        # SOURCE STAGE
+        # SOURCE
+        #
+        # develop branch from GitHub
         # --------------------------------------------------------
 
         - Name: Source
@@ -487,7 +500,9 @@ Resources:
 
 
         # --------------------------------------------------------
-        # BUILD + DEPLOY STAGE
+        # BUILD + DEPLOY
+        #
+        # CodeBuild executes buildspec.yaml.
         # --------------------------------------------------------
 
         - Name: Build
@@ -533,7 +548,7 @@ Outputs:
 
   PipelineName:
 
-    Description: Weddy development CodePipeline name
+    Description: Weddy CodePipeline name
 
     Value:
       !Ref WeddyPipeline

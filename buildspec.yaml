@@ -1,5 +1,10 @@
 version: 0.2
 
+env:
+  parameter-store:
+    WEBSITE_BUCKET: "/weddy/dev/website-bucket"
+    CLOUDFRONT_DISTRIBUTION_ID: "/weddy/dev/cloudfront-distribution-id"
+
 phases:
 
   install:
@@ -20,10 +25,14 @@ phases:
 
   post_build:
     commands:
-      - echo "Deploying website to S3"
-      - aws s3 sync dist/ s3://$WEBSITE_BUCKET --delete
+      - echo "Checking deployment configuration"
+      - test -n "$WEBSITE_BUCKET" || { echo "WEBSITE_BUCKET is empty"; exit 1; }
+      - test -n "$CLOUDFRONT_DISTRIBUTION_ID" || { echo "CLOUDFRONT_DISTRIBUTION_ID is empty"; exit 1; }
 
-      - echo "Invalidating CloudFront cache"
-      - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+      - echo "Deploying website to S3"
+      - aws s3 sync dist/ "s3://$WEBSITE_BUCKET" --delete
+
+      - echo "Invalidating CloudFront"
+      - aws cloudfront create-invalidation --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID" --paths "/*"
 
       - echo "Deployment complete"
