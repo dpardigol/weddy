@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Notre histoire — {{ couple.person1 }} & {{ couple.person2 }}
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="story-hero">
+
+    <div class="story-hero-inner">
+
+        <p class="eyebrow eyebrow-light">
+            Quelques chapitres
+        </p>
+
+        <h1>
+            Notre histoire
+        </h1>
+
+        <div class="light-decoration">
+            ✦
+        </div>
+
+        <p>
+            Des rencontres, des aventures et des souvenirs
+            qui nous ont conduits jusqu'ici.
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<section class="story-section">
+
+    <div class="container story-timeline">
+
+
+        {% for event in story %}
+
+
+        <article class="story-event">
+
+            <div class="story-year">
+
+                {{ event.year }}
+
+            </div>
+
+
+            <div class="story-axis">
+
+                <span></span>
+
+            </div>
+
+
+            <div class="story-content">
+
+                <p class="story-chapter">
+                    Chapitre
+                    {{ "%02d" | format(loop.index) }}
+                </p>
+
+                <h2>
+                    {{ event.title }}
+                </h2>
+
+                <p>
+                    {{ event.text }}
+                </p>
+
+            </div>
+
+        </article>
+
+
+        {% endfor %}
+
+
+    </div>
+
+</section>
+
+
+
+<section class="story-final">
+
+    <div class="story-final-inner">
+
+        <span class="decorative-symbol">
+            ✦
+        </span>
+
+        <p class="eyebrow">
+            Le prochain chapitre
+        </p>
+
+        <h2>
+            Et maintenant,<br>
+            une nouvelle histoire commence.
+        </h2>
+
+        <p>
+            Nous sommes heureux de pouvoir écrire
+            la suite entourés des personnes
+            qui comptent le plus pour nous.
+        </p>
+
+        <a
+            href="details.html"
+            class="primary-button"
+        >
+            Découvrir le mariage
+        </a>
+
+    </div>
+
+</section>
+
+
+{% endblock %}

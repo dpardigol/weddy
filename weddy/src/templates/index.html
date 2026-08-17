@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+{{ couple.person1 }} & {{ couple.person2 }} — Mariage
+{% endblock %}
+
+
+{% block content %}
+
+
+<section
+    class="landing-hero"
+    style="
+        background-image:
+        linear-gradient(
+            rgba(18, 15, 12, 0.20),
+            rgba(18, 15, 12, 0.38)
+        ),
+        url('assets/{{ images.hero }}');
+    "
+>
+
+    <div class="landing-content">
+
+        <p class="landing-kicker">
+            {{ couple.hero_kicker }}
+        </p>
+
+
+        <h1 class="landing-title">
+
+            <span>
+                {{ couple.person1 }}
+            </span>
+
+            <em>
+                &
+            </em>
+
+            <span>
+                {{ couple.person2 }}
+            </span>
+
+        </h1>
+
+
+        <div class="landing-decoration">
+
+            <span></span>
+
+            <i>✦</i>
+
+            <span></span>
+
+        </div>
+
+
+        <p class="landing-date">
+            {{ couple.wedding_date }}
+        </p>
+
+
+        <p class="landing-introduction">
+            {{ couple.introduction }}
+        </p>
+
+
+        <a
+            href="details.html"
+            class="hero-button"
+        >
+            Découvrez le programme
+        </a>
+
+    </div>
+
+
+    <a
+        href="#welcome"
+        class="scroll-indicator"
+        aria-label="Découvrir"
+    >
+
+        <span>
+            Découvrir
+        </span>
+
+        <i></i>
+
+    </a>
+
+</section>
+
+
+
+<section
+    id="welcome"
+    class="landing-welcome"
+>
+
+    <div class="landing-welcome-inner">
+
+        <span class="decorative-symbol">
+            ✦
+        </span>
+
+        <p class="eyebrow">
+            Une journée à partager
+        </p>
+
+        <h2>
+            Nous avons hâte<br>
+            de célébrer avec vous.
+        </h2>
+
+        <p>
+            Toutes les informations concernant la cérémonie,
+            le lieu et le déroulement de la journée
+            sont disponibles dans le programme.
+        </p>
+
+        <a
+            href="details.html"
+            class="text-link"
+        >
+            Voir le mariage
+        </a>
+
+    </div>
+
+</section>
+
+
+{% endblock %}

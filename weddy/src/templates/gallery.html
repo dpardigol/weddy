@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Galerie — {{ couple.person1 }} & {{ couple.person2 }}
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="gallery-intro">
+
+    <div class="gallery-intro-inner">
+
+        <p class="eyebrow">
+            Nos souvenirs
+        </p>
+
+        <h1>
+            Galerie
+        </h1>
+
+        <span class="decorative-symbol">
+            ✦
+        </span>
+
+        <p>
+            Quelques instants de notre histoire,
+            avant d'en créer de nouveaux avec vous.
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<section class="gallery-section">
+
+
+    {% if gallery %}
+
+
+    <div class="gallery-grid">
+
+
+        {% for image in gallery %}
+
+
+        <figure class="gallery-item">
+
+            <button
+                type="button"
+                class="gallery-button"
+                data-index="{{ loop.index0 }}"
+                data-image="assets/{{ image }}"
+                aria-label="Agrandir la photographie"
+            >
+
+                <img
+                    src="assets/{{ image }}"
+                    alt="Souvenir de {{ couple.person1 }} et {{ couple.person2 }}"
+                    loading="lazy"
+                >
+
+                <span class="gallery-hover">
+
+                    <i>
+                        Voir
+                    </i>
+
+                </span>
+
+            </button>
+
+        </figure>
+
+
+        {% endfor %}
+
+
+    </div>
+
+
+    {% else %}
+
+
+    <div class="empty-gallery">
+
+        <span>
+            ✦
+        </span>
+
+        <p>
+            Les photographies seront bientôt disponibles.
+        </p>
+
+    </div>
+
+
+    {% endif %}
+
+
+</section>
+
+
+
+<div
+    class="lightbox"
+    aria-hidden="true"
+>
+
+    <button
+        class="lightbox-close"
+        type="button"
+        aria-label="Fermer"
+    >
+        ×
+    </button>
+
+
+    <button
+        class="lightbox-previous"
+        type="button"
+        aria-label="Photo précédente"
+    >
+        ‹
+    </button>
+
+
+    <img
+        class="lightbox-image"
+        src=""
+        alt=""
+    >
+
+
+    <button
+        class="lightbox-next"
+        type="button"
+        aria-label="Photo suivante"
+    >
+        ›
+    </button>
+
+</div>
+
+
+{% endblock %}
+
+
+
+{% block scripts %}
+
+<script>
+
+    const galleryButtons =
+        Array.from(
+            document.querySelectorAll(
+                ".gallery-button"
+            )
+        );
+
+    const lightbox =
+        document.querySelector(
+            ".lightbox"
+        );
+
+    const lightboxImage =
+        document.querySelector(
+            ".lightbox-image"
+        );
+
+    const closeButton =
+        document.querySelector(
+            ".lightbox-close"
+        );
+
+    const previousButton =
+        document.querySelector(
+            ".lightbox-previous"
+        );
+
+    const nextButton =
+        document.querySelector(
+            ".lightbox-next"
+        );
+
+
+    let currentIndex = 0;
+
+
+    function showImage(index) {
+
+        if (!galleryButtons.length) {
+            return;
+        }
+
+        currentIndex =
+            (
+                index +
+                galleryButtons.length
+            )
+            %
+            galleryButtons.length;
+
+        lightboxImage.src =
+            galleryButtons[
+                currentIndex
+            ].dataset.image;
+
+    }
+
+
+    function openLightbox(index) {
+
+        showImage(index);
+
+        lightbox.classList.add(
+            "lightbox-open"
+        );
+
+        lightbox.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+        document.body.classList.add(
+            "no-scroll"
+        );
+
+    }
+
+
+    function closeLightbox() {
+
+        lightbox.classList.remove(
+            "lightbox-open"
+        );
+
+        lightbox.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        document.body.classList.remove(
+            "no-scroll"
+        );
+
+    }
+
+
+    galleryButtons.forEach(
+        (button, index) => {
+
+            button.addEventListener(
+                "click",
+                () => openLightbox(index)
+            );
+
+        }
+    );
+
+
+    closeButton.addEventListener(
+        "click",
+        closeLightbox
+    );
+
+
+    previousButton.addEventListener(
+        "click",
+        () => showImage(
+            currentIndex - 1
+        )
+    );
+
+
+    nextButton.addEventListener(
+        "click",
+        () => showImage(
+            currentIndex + 1
+        )
+    );
+
+
+    lightbox.addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target === lightbox
+            ) {
+                closeLightbox();
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                !lightbox.classList.contains(
+                    "lightbox-open"
+                )
+            ) {
+                return;
+            }
+
+            if (event.key === "Escape") {
+                closeLightbox();
+            }
+
+            if (event.key === "ArrowLeft") {
+                showImage(
+                    currentIndex - 1
+                );
+            }
+
+            if (event.key === "ArrowRight") {
+                showImage(
+                    currentIndex + 1
+                );
+            }
+
+        }
+    );
+
+</script>
+
+{% endblock %}

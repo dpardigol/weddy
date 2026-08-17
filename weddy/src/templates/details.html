@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Le mariage — {{ couple.person1 }} & {{ couple.person2 }}
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="wedding-intro">
+
+    <div class="container wedding-intro-grid">
+
+        <div class="wedding-intro-image">
+
+            <div class="image-frame">
+
+                <img
+                    src="assets/{{ images.couple }}"
+                    alt="{{ couple.person1 }} et {{ couple.person2 }}"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="wedding-intro-content">
+
+            <p class="eyebrow">
+                Le grand jour
+            </p>
+
+            <h1>
+                Une journée à<br>
+                célébrer ensemble
+            </h1>
+
+            <div class="small-ornament">
+                ✦
+            </div>
+
+            <p class="large-copy">
+                {{ couple.introduction }}
+            </p>
+
+            <p>
+                Nous avons imaginé cette journée comme un moment
+                chaleureux, élégant et profondément personnel.
+                Votre présence est ce qui la rendra véritablement
+                inoubliable.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="wedding-quote">
+
+    <div class="quote-inner">
+
+        <span class="large-quote">
+            “
+        </span>
+
+        <blockquote>
+            Ce qui compte le plus n'est pas l'endroit où nous allons,
+            mais ceux avec qui nous partageons le chemin.
+        </blockquote>
+
+        <div class="quote-signature">
+            {{ couple.person1 }} & {{ couple.person2 }}
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="program-section">
+
+    <div class="container">
+
+        <header class="section-heading">
+
+            <p class="eyebrow">
+                {{ couple.wedding_date }}
+            </p>
+
+            <h2>
+                Le programme
+            </h2>
+
+            <p>
+                Quelques rendez-vous, et surtout beaucoup
+                de moments à partager ensemble.
+            </p>
+
+        </header>
+
+
+        <div class="program-grid">
+
+
+            <article class="program-card">
+
+                <span class="program-number">
+                    01
+                </span>
+
+                <p class="program-time">
+                    {{ wedding.ceremony.time }}
+                </p>
+
+                <h3>
+                    Cérémonie
+                </h3>
+
+                <div class="program-line"></div>
+
+                <strong>
+                    {{ wedding.ceremony.place }}
+                </strong>
+
+                <p>
+                    {{ wedding.ceremony.address }}
+                </p>
+
+            </article>
+
+
+
+            <article class="program-card">
+
+                <span class="program-number">
+                    02
+                </span>
+
+                <p class="program-time">
+                    {{ wedding.reception.time }}
+                </p>
+
+                <h3>
+                    Cocktail
+                </h3>
+
+                <div class="program-line"></div>
+
+                <strong>
+                    {{ wedding.reception.place }}
+                </strong>
+
+                <p>
+                    {{ wedding.reception.address }}
+                </p>
+
+            </article>
+
+
+
+            <article class="program-card">
+
+                <span class="program-number">
+                    03
+                </span>
+
+                <p class="program-time">
+                    {{ wedding.dinner.time }}
+                </p>
+
+                <h3>
+                    Dîner & soirée
+                </h3>
+
+                <div class="program-line"></div>
+
+                <strong>
+                    {{ wedding.dinner.place }}
+                </strong>
+
+                <p>
+                    Dîner, discours et soirée.
+                </p>
+
+            </article>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section class="venue-section">
+
+    <div class="container venue-grid">
+
+
+        <div class="venue-photo">
+
+            <img
+                src="assets/{{ images.venue }}"
+                alt="{{ wedding.reception.place }}"
+                loading="lazy"
+            >
+
+        </div>
+
+
+        <div class="venue-information">
+
+            <p class="eyebrow">
+                Le lieu
+            </p>
+
+            <h2>
+                {{ wedding.reception.place }}
+            </h2>
+
+            <div class="small-ornament">
+                ✦
+            </div>
+
+            <p class="venue-address">
+                {{ wedding.reception.address }}
+            </p>
+
+            <p>
+                Nous avons choisi ce lieu pour son atmosphère,
+                son élégance et le cadre qu'il offrira à cette
+                journée si particulière.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+
+<section class="practical-section">
+
+    <div class="container">
+
+        <header class="section-heading">
+
+            <p class="eyebrow">
+                Quelques détails
+            </p>
+
+            <h2>
+                Informations pratiques
+            </h2>
+
+        </header>
+
+
+        <div class="practical-grid">
+
+
+            <article class="practical-item">
+
+                <span>
+                    01
+                </span>
+
+                <h3>
+                    Arrivée
+                </h3>
+
+                <p>
+                    Nous vous conseillons d'arriver environ
+                    20 minutes avant le début de la cérémonie.
+                </p>
+
+            </article>
+
+
+            <article class="practical-item">
+
+                <span>
+                    02
+                </span>
+
+                <h3>
+                    Tenue
+                </h3>
+
+                <p>
+                    Une tenue élégante dans laquelle vous vous
+                    sentez surtout prêts à célébrer avec nous.
+                </p>
+
+            </article>
+
+
+            <article class="practical-item">
+
+                <span>
+                    03
+                </span>
+
+                <h3>
+                    Soirée
+                </h3>
+
+                <p>
+                    Après le dîner, place à la musique,
+                    à la fête et aux souvenirs.
+                </p>
+
+            </article>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<section
+    class="wedding-ending"
+    style="
+        background-image:
+        linear-gradient(
+            rgba(20,18,16,.28),
+            rgba(20,18,16,.42)
+        ),
+        url('assets/{{ images.venue }}');
+    "
+>
+
+    <div>
+
+        <p>
+            {{ couple.wedding_date }}
+        </p>
+
+        <h2>
+            Rendez-vous<br>
+            au grand jour.
+        </h2>
+
+    </div>
+
+</section>
+
+
+{% endblock %}

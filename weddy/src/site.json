@@ -1,0 +1,74 @@
+{
+  "site": {
+    "language": "fr"
+  },
+
+  "couple": {
+    "person1": "Clara",
+    "person2": "Clément",
+    "wedding_date": "14 Juin 2027",
+
+    "hero_kicker": "Nous nous marions !",
+
+    "introduction": "Entourés de ceux que nous aimons, nous avons la joie de vous inviter à célébrer notre mariage."
+  },
+
+  "theme": {
+    "primary_color": "#8B7865",
+    "secondary_color": "#EEE8E1",
+    "background_color": "#FBF9F6",
+    "text_color": "#302D2A",
+
+    "heading_font": "Cormorant Garamond",
+    "body_font": "Montserrat"
+  },
+
+  "images": {
+    "hero": "images/hero.jpg",
+    "couple": "images/couple.jpg",
+    "venue": "images/venue.jpg"
+  },
+
+  "story": [
+    {
+      "year": "2018",
+      "title": "Notre rencontre",
+      "text": "C'est ici que notre histoire a commencé."
+    },
+    {
+      "year": "2021",
+      "title": "Nos aventures",
+      "text": "Des voyages, des projets et de nombreux souvenirs partagés."
+    },
+    {
+      "year": "2026",
+      "title": "La demande",
+      "text": "Une question, une réponse, et le début d'un nouveau chapitre."
+    },
+    {
+      "year": "2027",
+      "title": "Notre mariage",
+      "text": "Et maintenant, nous avons hâte de célébrer cette nouvelle étape avec vous."
+    }
+  ],
+
+  "wedding": {
+    "ceremony": {
+      "time": "14:30",
+      "place": "Église Saint-Martin",
+      "address": "12 rue de l'Église, Annecy"
+    },
+
+    "reception": {
+      "time": "17:00",
+      "place": "Domaine des Sources",
+      "address": "20 route du Lac, Annecy"
+    },
+
+    "dinner": {
+      "time": "19:30",
+      "place": "Domaine des Sources",
+      "address": "20 route du Lac, Annecy"
+    }
+  }
+}
