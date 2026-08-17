@@ -1,0 +1,571 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >
+  Complete CI/CD infrastructure for the Weddy development environment.
+  GitHub develop -> CodePipeline -> CodeBuild -> S3 -> CloudFront.
+
+
+Parameters:
+
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+
+  GitHubOwner:
+    Type: String
+    Default: dpardigol
+
+  GitHubRepository:
+    Type: String
+    Default: weddy
+
+  GitHubBranch:
+    Type: String
+    Default: develop
+
+
+Resources:
+
+  # ============================================================
+  # GITHUB CONNECTION
+  # ============================================================
+
+  GitHubConnection:
+    Type: AWS::CodeConnections::Connection
+
+    Properties:
+      ConnectionName: !Sub "weddy-${Environment}-github"
+      ProviderType: GitHub
+
+
+  # ============================================================
+  # CODEPIPELINE ARTIFACT BUCKET
+  #
+  # Internal bucket used by CodePipeline to pass the Git source
+  # artifact to CodeBuild.
+  # This is NOT the website bucket.
+  # ============================================================
+
+  PipelineArtifactBucket:
+    Type: AWS::S3::Bucket
+
+    Properties:
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+      VersioningConfiguration:
+        Status: Enabled
+
+
+  # ============================================================
+  # CODEBUILD IAM ROLE
+  # ============================================================
+
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+
+    Properties:
+
+      RoleName: !Sub "weddy-${Environment}-codebuild-role"
+
+      AssumeRolePolicyDocument:
+
+        Version: "2012-10-17"
+
+        Statement:
+
+          - Effect: Allow
+
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+
+            Action:
+              - sts:AssumeRole
+
+
+      Policies:
+
+        # --------------------------------------------------------
+        # CLOUDWATCH LOGS
+        # --------------------------------------------------------
+
+        - PolicyName: CodeBuildLogs
+
+          PolicyDocument:
+
+            Version: "2012-10-17"
+
+            Statement:
+
+              - Effect: Allow
+
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+
+                Resource: "*"
+
+
+        # --------------------------------------------------------
+        # SSM PARAMETER STORE
+        # --------------------------------------------------------
+
+        - PolicyName: ReadWeddyParameters
+
+          PolicyDocument:
+
+            Version: "2012-10-17"
+
+            Statement:
+
+              - Effect: Allow
+
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/weddy/${Environment}/*"
+
+
+        # --------------------------------------------------------
+        # CODEPIPELINE ARTIFACT BUCKET
+        #
+        # CodeBuild needs to read the source artifact that
+        # CodePipeline places in this bucket.
+        # --------------------------------------------------------
+
+        - PolicyName: ReadPipelineArtifacts
+
+          PolicyDocument:
+
+            Version: "2012-10-17"
+
+            Statement:
+
+              - Effect: Allow
+
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+
+                Resource:
+                  - !GetAtt PipelineArtifactBucket.Arn
+
+
+              - Effect: Allow
+
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+
+                Resource:
+                  - !Sub "${PipelineArtifactBucket.Arn}/*"
+
+
+        # --------------------------------------------------------
+        # WEBSITE S3 BUCKET
+        #
+        # Restricted to the exact bucket exported by website.yaml
+        # --------------------------------------------------------
+
+        - PolicyName: DeployWeddyWebsite
+
+          PolicyDocument:
+
+            Version: "2012-10-17"
+
+            Statement:
+
+              - Sid: ListWebsiteBucket
+
+                Effect: Allow
+
+                Action:
+                  - s3:ListBucket
+
+                Resource:
+                  - Fn::ImportValue: WeddyDevWebsiteBucketArn
+
+
+              - Sid: ManageWebsiteObjects
+
+                Effect: Allow
+
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+
+                Resource:
+                  - !Join
+                    - ""
+                    - - Fn::ImportValue: WeddyDevWebsiteBucketArn
+                      - "/*"
+
+
+        # --------------------------------------------------------
+        # CLOUDFRONT INVALIDATION
+        #
+        # Restricted to the exact distribution exported by
+        # website.yaml
+        # --------------------------------------------------------
+
+        - PolicyName: InvalidateWeddyCloudFront
+
+          PolicyDocument:
+
+            Version: "2012-10-17"
+
+            Statement:
+
+              - Effect: Allow
+
+                Action:
+                  - cloudfront:CreateInvalidation
+
+                Resource:
+                  - !Sub
+                    - "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${DistributionId}"
+                    - DistributionId:
+                        Fn::ImportValue: WeddyDevCloudFrontDistributionId
+
+
+  # ============================================================
+  # CODEBUILD PROJECT
+  #
+  # IMPORTANT:
+  # Logical ID preserved from your existing stack.
+  # Do NOT rename this unless you intentionally replace
+  # the existing CodeBuild project.
+  # ============================================================
+
+  WeddyCodeBuildProject:
+    Type: AWS::CodeBuild::Project
+
+    Properties:
+
+      Name: !Sub "weddy-${Environment}-build"
+
+      Description: !Sub >
+        Build and deploy the Weddy ${Environment} website.
+
+      ServiceRole:
+        !GetAtt CodeBuildServiceRole.Arn
+
+
+      Source:
+
+        Type: CODEPIPELINE
+
+        BuildSpec: buildspec.yml
+
+
+      Artifacts:
+
+        Type: CODEPIPELINE
+
+
+      Environment:
+
+        Type: LINUX_CONTAINER
+
+        ComputeType:
+          BUILD_GENERAL1_SMALL
+
+        Image:
+          aws/codebuild/standard:7.0
+
+        ImagePullCredentialsType:
+          CODEBUILD
+
+        PrivilegedMode:
+          false
+
+
+      TimeoutInMinutes:
+        10
+
+
+      LogsConfig:
+
+        CloudWatchLogs:
+          Status: ENABLED
+
+
+      Tags:
+
+        - Key: Project
+          Value: Weddy
+
+        - Key: Environment
+          Value: !Ref Environment
+
+
+  # ============================================================
+  # CODEPIPELINE IAM ROLE
+  # ============================================================
+
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+
+    Properties:
+
+      RoleName: !Sub "weddy-${Environment}-codepipeline-role"
+
+      AssumeRolePolicyDocument:
+
+        Version: "2012-10-17"
+
+        Statement:
+
+          - Effect: Allow
+
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+
+            Action:
+              - sts:AssumeRole
+
+
+      Policies:
+
+        - PolicyName: WeddyCodePipelinePolicy
+
+          PolicyDocument:
+
+            Version: "2012-10-17"
+
+            Statement:
+
+              # --------------------------------------------------
+              # GITHUB CONNECTION
+              # --------------------------------------------------
+
+              - Sid: UseGitHubConnection
+
+                Effect: Allow
+
+                Action:
+                  - codeconnections:UseConnection
+
+                Resource:
+                  - !Ref GitHubConnection
+
+
+              # --------------------------------------------------
+              # CODEBUILD
+              # --------------------------------------------------
+
+              - Sid: ExecuteCodeBuild
+
+                Effect: Allow
+
+                Action:
+                  - codebuild:StartBuild
+                  - codebuild:BatchGetBuilds
+
+                Resource:
+                  - !GetAtt WeddyCodeBuildProject.Arn
+
+
+              # --------------------------------------------------
+              # ARTIFACT BUCKET
+              # --------------------------------------------------
+
+              - Sid: AccessArtifactBucket
+
+                Effect: Allow
+
+                Action:
+                  - s3:GetBucketVersioning
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+
+                Resource:
+                  - !GetAtt PipelineArtifactBucket.Arn
+
+
+              - Sid: ManagePipelineArtifacts
+
+                Effect: Allow
+
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+
+                Resource:
+                  - !Sub "${PipelineArtifactBucket.Arn}/*"
+
+
+  # ============================================================
+  # CODEPIPELINE
+  # ============================================================
+
+  WeddyPipeline:
+    Type: AWS::CodePipeline::Pipeline
+
+    Properties:
+
+      Name: !Sub "weddy-${Environment}-pipeline"
+
+      RoleArn:
+        !GetAtt CodePipelineServiceRole.Arn
+
+
+      ArtifactStore:
+
+        Type: S3
+
+        Location:
+          !Ref PipelineArtifactBucket
+
+
+      Stages:
+
+        # --------------------------------------------------------
+        # SOURCE STAGE
+        # --------------------------------------------------------
+
+        - Name: Source
+
+          Actions:
+
+            - Name: GitHubSource
+
+              ActionTypeId:
+
+                Category: Source
+
+                Owner: AWS
+
+                Provider: CodeStarSourceConnection
+
+                Version: "1"
+
+
+              Configuration:
+
+                ConnectionArn:
+                  !Ref GitHubConnection
+
+                FullRepositoryId:
+                  !Sub "${GitHubOwner}/${GitHubRepository}"
+
+                BranchName:
+                  !Ref GitHubBranch
+
+                OutputArtifactFormat:
+                  CODE_ZIP
+
+                DetectChanges:
+                  "true"
+
+
+              OutputArtifacts:
+
+                - Name: SourceArtifact
+
+
+              RunOrder: 1
+
+
+        # --------------------------------------------------------
+        # BUILD + DEPLOY STAGE
+        # --------------------------------------------------------
+
+        - Name: Build
+
+          Actions:
+
+            - Name: BuildAndDeploy
+
+              ActionTypeId:
+
+                Category: Build
+
+                Owner: AWS
+
+                Provider: CodeBuild
+
+                Version: "1"
+
+
+              InputArtifacts:
+
+                - Name: SourceArtifact
+
+
+              Configuration:
+
+                ProjectName:
+                  !Ref WeddyCodeBuildProject
+
+
+              RunOrder: 1
+
+
+Outputs:
+
+  GitHubConnectionArn:
+
+    Description: GitHub CodeConnections ARN
+
+    Value:
+      !Ref GitHubConnection
+
+
+  PipelineName:
+
+    Description: Weddy development CodePipeline name
+
+    Value:
+      !Ref WeddyPipeline
+
+
+  CodeBuildProjectName:
+
+    Description: Weddy CodeBuild project name
+
+    Value:
+      !Ref WeddyCodeBuildProject
+
+
+  CodeBuildRoleArn:
+
+    Description: IAM role used by CodeBuild
+
+    Value:
+      !GetAtt CodeBuildServiceRole.Arn
+
+
+  CodePipelineRoleArn:
+
+    Description: IAM role used by CodePipeline
+
+    Value:
+      !GetAtt CodePipelineServiceRole.Arn
+
+
+  PipelineArtifactBucketName:
+
+    Description: Internal CodePipeline artifact bucket
+
+    Value:
+      !Ref PipelineArtifactBucket
