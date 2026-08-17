@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+
+  install:
+    commands:
+      - echo "Installing uv"
+      - pip install uv
+
+  pre_build:
+    commands:
+      - echo "Installing project dependencies"
+      - uv sync
+
+  build:
+    commands:
+      - echo "Building Weddy static website"
+      - cd weddy/src
+      - uv run build.py
+
+  post_build:
+    commands:
+      - echo "Deploying website to S3"
+      - aws s3 sync dist/ s3://$WEBSITE_BUCKET --delete
+
+      - echo "Invalidating CloudFront cache"
+      - aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*"
+
+      - echo "Deployment complete"

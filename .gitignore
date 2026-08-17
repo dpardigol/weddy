@@ -8,3 +8,13 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Generated website
+weddy/src/dist/
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
